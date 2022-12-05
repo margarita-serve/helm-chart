@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "main-api-server.fullname" . }}
+  labels:
+    {{- include "main-api-server.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: rest-api
+      protocol: TCP
+      name: rest-api
+  selector:
+    {{- include "main-api-server.selectorLabels" . | nindent 4 }}

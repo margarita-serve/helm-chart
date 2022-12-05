@@ -1,0 +1,136 @@
+{{define "config-main-api"}}
+# Applications
+applications:
+  servers:
+    restapi:
+      options:
+        showEngineHeader: true
+        displayOpenAPI: true
+        hostname: {{ .Values.hostname }} 
+        listener:
+          port: 8080
+        middlewares:
+          logger:
+            enable: true
+        openAPIDefinition: # OpenAPIDefinition
+          info:
+            title: "KoreServe REST API Server"
+            description: ""
+            version: 0.1.0
+            basePath: "/api/v1"
+
+# Databases
+databases:
+  identityDB:
+    connectionName: "db-identity"
+    driver: "mysql" # mysql, postgres, sqlserver, sqlite3
+    username: {{ .Values.mariadb.auth.username }}
+    password: {{ .Values.mariadb.auth.password }}
+    hostName: "{{ .Release.Name }}-mariadb:3306" # hostname:port OR path
+    dbName: {{ .Values.mariadb.auth.database }}
+    config: "charset=utf8&parseTime=True&loc=Local" 
+    maxIdleConns: 10
+    maxOpenConns: 10
+    logMode: {{ .Values.db.logMode }}
+  mainDB:
+    connectionName: "db-main"
+    driver: "mysql" # mysql, postgres, sqlserver, sqlite3
+    username: {{ .Values.mariadb.auth.username }}
+    password: {{ .Values.mariadb.auth.password }}
+    hostName: "{{ .Release.Name }}-mariadb:3306" # hostname:port OR path
+    dbName: {{ .Values.mariadb.auth.database }}
+    config: "charset=utf8&parseTime=True&loc=Local" 
+    maxIdleConns: 10
+    maxOpenConns: 10
+    logMode: {{ .Values.db.logMode }}
+  emailDB:
+    connectionName: "db-email"
+    driver: "mysql" # mysql, postgres, sqlserver, sqlite3
+    username: {{ .Values.mariadb.auth.username }}
+    password: {{ .Values.mariadb.auth.password }}
+    hostName: "{{ .Release.Name }}-mariadb:3306" # hostname:port OR path
+    dbName: {{ .Values.mariadb.auth.database }}
+    config: "charset=utf8&parseTime=True&loc=Local" 
+    maxIdleConns: 10
+    maxOpenConns: 10
+    logMode: {{ .Values.db.logMode }}
+
+# IAM
+IAM:
+  defaultAdmin:
+    username: {{ .Values.IAM.defaultAdmin.username }}
+    password: {{ .Values.IAM.defaultAdmin.password }}
+    nickName: {{ .Values.IAM.defaultAdmin.nickName }}
+    email: {{ .Values.IAM.defaultAdmin.email }}
+    authorityID: {{ .Values.IAM.defaultAdmin.authorityID }}
+  defaultUser:
+    username: {{ .Values.IAM.defaultUser.username }}
+    password: {{ .Values.IAM.defaultUser.password }}
+    nickName: {{ .Values.IAM.defaultUser.nickName }}
+    email: {{ .Values.IAM.defaultUser.email }}
+    authorityID: {{ .Values.IAM.defaultUser.authorityID }}
+  registration:
+    activationURL: {{ .Values.IAM.registration.activationURL }}
+    defaultAuthorityID: {{ .Values.IAM.registration.defaultAuthorityID }}
+  JWT:
+    issuer: {{ .Values.IAM.JWT.issuer }}
+    signingKey: {{ .Values.IAM.JWT.signingKey }}
+
+# Directory Locations
+dirLocations:
+  conf: "./conf"
+  www: "./www"
+  temp: "./temp"
+  log: "./logs"
+  cache: "./caches"
+  modelPackageFileRootPath: "koreserve-modelpackage"
+  modelPath: "/model"
+  trainingDatasetPath: "/training-dataset"
+  holdoutDatasetPath: "/holdout-dataset" 
+  monitoringFileRootPath: "koreserve-monitoring"
+  actualDataPath: "/actual-data"
+
+# MicroService & ThirdParty Services
+connectors:
+  storages:
+    minio:
+      endpoint: "{{ tpl .Values.global.minioEndpoint . }}"
+      accessKeyID: "{{ .Values.global.minioAccessKeyID }}"
+      secretAccessKey: "{{ .Values.global.minioSecretAccessKey }}"
+      useSSL: {{ .Values.minio.useSSL }}
+  driftServer:
+          endpoint: "{{ tpl .Values.driftServer.endpoint . }}"
+  accuracyServer:
+          endpoint: "{{ tpl .Values.accuracyServer.endpoint . }}"
+  serviceHealthServer:
+          endpoint: "{{ tpl .Values.serviceHealthServer.endpoint . }}"
+  graphServer:
+          endpoint: "{{ tpl .Values.graphServer.endpoint . }}"
+  kafka:
+    endpoint: "{{ tpl .Values.global.kafkaBrokerEndpoint . }}" 
+    groupID: "{{ .Values.kafka.groupID }}"
+    autoOffsetReset: {{ .Values.kafka.autoOffsetReset }}
+  inferenceSvc:
+    kserveAPISvrEndPoint: "{{ tpl .Values.inferenceSvc.kserveAPISvrEndPoint . }}"
+    kserveHostName: "{{ .Values.inferenceSvc.kserveHostName | default "example.com" }}"
+    kserveIngressEndPoint: "{{ tpl .Values.inferenceSvc.kserveIngressEndPoint . }}"
+    inferenceNamespace: "{{ tpl .Values.inferenceSvc.inferenceNamespace . }}"
+
+# SMTP Servers
+SMTPServers:
+  defaultSMTP:
+    server: {{ .Values.SMTPServers.server }}
+    port: {{ .Values.SMTPServers.port }}
+    username: {{ .Values.SMTPServers.username }}
+    password: {{ .Values.SMTPServers.password }}
+    senderEmail: {{ .Values.SMTPServers.senderEmail }}
+    senderName: {{ .Values.SMTPServers.senderName }}
+
+{{end}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "main-api-server.fullname" . }}
+data:
+  config.yaml: {{ (include "config-main-api" .) | trim | quote }} 

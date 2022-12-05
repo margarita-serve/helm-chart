@@ -1,0 +1,77 @@
+apiVersion: v2
+appVersion: latest
+description: A Helm chart for Kubernetes
+name: margarita-serve
+type: application
+version: 0.1.0
+
+dependencies:
+- name: tobs
+  repository: "https://charts.timescale.com/"
+  version: "0.11.3"
+  condition: tobs.enabled
+
+- name: minio
+  repository: "https://helm.min.io/"
+  version: "8.0.9"
+  condition: minio.enabled
+        
+- name: kafka
+  repository: "https://charts.bitnami.com/bitnami"
+  version: "18.0.3"
+  condition: kafka.enabled
+
+- name: elasticsearch
+  repository: "https://helm.elastic.co"
+  version: "v7.17.3"
+  condition: elasticsearch.enabled
+
+- name: logstash
+  repository: "https://helm.elastic.co"
+  version: "v7.17.3"
+  condition: logstash.enabled
+ 
+- name: kibana
+  repository: "https://helm.elastic.co"
+  version: "v7.17.3"
+  condition: kibana.enabled  
+
+- name: margarita-serve-kserve-api
+  repository: "file://./charts/kserve-api"
+  version: "0.1.0"
+  condition: kserve-api.enabled
+
+- name: margarita-serve-main-api-server
+  repository: "file://./charts/main-api-server"
+  version: "0.1.0"   
+  condition: main-api-server.enabled
+
+- name: margarita-serve-service-monitor
+  repository: "file://./charts/service-monitor"
+  version: "0.1.0"
+  condition: service-monitor.enabled
+
+- name: margarita-serve-accuracy-monitor
+  repository: "file://./charts/accuracy-monitor"
+  version: "0.1.0"
+  condition: accuracy-monitor.enabled
+
+- name: margarita-serve-drift-monitor
+  repository: "file://./charts/drift-monitor"
+  version: "0.1.0"
+  condition: drift-monitor.enabled
+
+- name: margarita-serve-service-monitor
+  repository: "file://./charts/service-monitor"
+  version: "0.1.0"
+  condition: service-monitor.enabled
+
+- name: margarita-serve-graph-server
+  repository: "file://./charts/graph-server"
+  version: "0.1.0"
+  condition: graph-server.enabled
+
+- name: margarita-serve-frontend
+  repository: "file://./charts/frontend"
+  version: "0.1.0"
+  condition: frontend.enabled

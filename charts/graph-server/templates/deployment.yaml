@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "graph-server.fullname" . }}
+  labels:
+    {{- include "graph-server.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "graph-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "graph-server.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "graph-server.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 5006
+              protocol: TCP
+          env:
+          - name: DRIFT_MONITOR_ENDPOINT
+            value: "{{ .Values.driftMonitorEndpoint | default (printf "%s-drift-monitor.%s.svc.cluster.local" (.Release.Name) (.Release.Namespace)) }}"
+          - name: ACCURACY_MONITOR_ENDPOINT
+            value: "{{ .Values.accuracyMonitorEndpoint | default (printf "%s-accuracy-monitor.%s.svc.cluster.local" (.Release.Name) (.Release.Namespace)) }}"
+          - name: SERVICE_MONITOR_ENDPOINT
+            value: "{{ .Values.serviceMonitorEndpoint | default (printf "%s-service-monitor.%s.svc.cluster.local" (.Release.Name) (.Release.Namespace)) }}"
+          - name: KORESERVE_MAIN_REST_API_SERVER_ENDPOINT
+            value: "{{ .Values.mainRestApiServerEndpoint | default (printf "%s-main-api-server.%s.svc.cluster.local" (.Release.Name) (.Release.Namespace)) }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

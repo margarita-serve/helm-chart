@@ -1,0 +1,276 @@
+# Default values for margarita-serve.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  app: margarita-serve
+  kafkaBrokerEndpoint: "{{ tpl .Release.Name .}}-kafka.{{ tpl .Release.Namespace .}}.svc.cluster.local:9092"
+  grafanaEndpoint: "http://{{ tpl .Release.Name .}}-grafana.{{ tpl .Release.Namespace .}}.svc.cluster.local:80"
+  elasticSearchEndpoint: "http://elasticsearch-master.{{ tpl .Release.Namespace .}}.svc.cluster.local:9200"
+  minioEndpoint: "{{ tpl .Release.Name .}}-minio.{{ tpl .Release.Namespace .}}.svc.cluster.local:9000"
+  minioAccessKeyID: "minioadmin"
+  minioSecretAccessKey: "minioadmin"
+  storageClass: "nfs-client"
+ 
+
+#############################
+# Base OpenSource PlatForms #  
+#############################
+ 
+tobs:
+  enabled: true
+  nameOverride: "tobs"
+  fullnameOverride: "tobs"
+  kube-prometheus-stack:
+    enabled: true
+    prometheus:
+      prometheusSpec:
+        # Prometheus pod storage spec
+        storageSpec:
+          # Using PersistentVolumeClaim
+          # disable mount sub path, use the root directory of pvc
+          disableMountSubPath: true
+          volumeClaimTemplate:
+            spec:
+              storageClassName: "nfs-client"
+              accessModes:
+                - "ReadWriteOnce"
+              resources:
+                requests:
+                  storage: 8Gi
+
+minio:
+  enabled: true
+  image:
+    repository: "minio/minio"
+    tag: "RELEASE.2021-04-22T15-44-28Z.hotfix.8c654a725"
+  accessKey: "minioadmin"
+  secretKey: "minioadmin"
+  persistence:
+    storageClass: "nfs-client"
+    size: "10Gi"
+
+
+kafka:
+  enabled: true
+
+
+elasticsearch:
+  enalbed: true
+  volumeClaimTemplate: 
+    accessModes: ["ReadWriteOnce"]
+    storageClassName: "nfs-client"
+    resources:
+      requests:
+        storage: "10Gi"
+
+logstash:
+  enabled: true
+  fullnameOverride: "logstash"
+  logstashPipeline:
+         inference.conf:
+           input {
+             http {
+                host => "0.0.0.0"
+                port => 8080
+               }
+           }
+     
+           filter {
+             if [headers][ce_type] == "org.kubeflow.serving.inference.request" {
+              json {
+                source => "message"
+                add_field => {"type" => "request"}
+              }
+             } else if [headers][ce_type] == "org.kubeflow.serving.inference.response" {
+              mutate {
+                add_field => {"type" => "response"}
+              }
+             }
+     
+             mutate {
+               add_field => {"inference_servicename" => "%{[headers][ce_inferenceservicename]}"}
+               add_field => {"event_id" => "%{[headers][ce_id]}"}
+               add_field => {"timestamp" => "%{[headers][ce_time]}"}
+               add_field => {"component" => "%{[headers][ce_component]}"}
+               remove_field => ["host", "@version", "@timestamp", "headers", "message"]
+             }
+           }
+     
+           output {
+               stdout {
+                 codec => rubydebug { metadata => true }
+               }
+               elasticsearch {
+                  hosts => "elasticsearch-master.{{ tpl .Release.Namespace .}}.svc.cluster.local:9200"
+                  index => "inference_org_%{[inference_servicename]}"
+                  document_id => "%{[event_id]}"
+                  doc_as_upsert => true
+                  action => "update"
+               }
+               if[component] == "predictor" {
+                 kafka {
+                    codec => json
+                    topic_id => "logstash-inference-data"
+                    bootstrap_servers => "{{ tpl .Release.Name .}}-kafka.{{ tpl .Release.Namespace .}}.svc.cluster.local:9092"
+                    client_id => "logstash"
+                 }
+               }
+           }
+            
+kibana:
+  enabled: true        
+  fullnameOverride: "kibana"
+    
+#################
+# MicroServices #
+################# 
+service-monitor:
+  enabled: true
+  resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2
+    memory: 1Gi
+  requests:
+    cpu: 1
+    memory: 512Mi
+
+accuracy-monitor:
+  enabled: true
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2
+    memory: 1Gi
+  requests:
+    cpu: 1
+    memory: 512Mi
+
+
+drift-monitor:
+  enabled: true
+  resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2
+    memory: 1Gi
+  requests:
+    cpu: 1
+    memory: 512Mi
+
+
+graph-server:
+  enabled: true
+  resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2
+    memory: 1Gi
+  requests:
+    cpu: 1
+    memory: 512Mi
+
+
+kserve-api:
+  enabled: true
+  kserveLoggerUrl: "http://kafka-broker-ingress.knative-eventing.svc.cluster.local/{{ tpl .Release.Namespace .}}/kafka-broker"
+  resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2
+    memory: 1Gi
+  requests:
+    cpu: 1
+    memory: 512Mi
+
+frontend:
+  enabled: true
+  mainApiServerEndpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-main-api-server.{{ tpl .Release.Namespace .}}.svc.cluster.local:80"
+  resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2
+    memory: 1Gi
+  requests:
+    cpu: 1
+    memory: 512Mi
+
+main-api-server:
+  enabled: true
+  resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2
+    memory: 1Gi
+  requests:
+    cpu: 1
+    memory: 512Mi
+
+  hostname: "your-api-server-domain.com"       
+  
+  kafka:
+    groupID: "monitor-group"
+    autoOffsetReset: "latest"
+
+  inferenceSvc:
+    kserveAPISvrEndPoint: "http://{{ tpl .Release.Name .}}-margarita-serve-kserve-api.{{ tpl .Release.Namespace .}}.svc.cluster.local:80" 
+    kserveHostName: "example.com"
+    kserveIngressEndPoint: "http://istio-ingressgateway.istio-system.svc.cluster.local:80" 
+    inferenceNamespace: "{{ tpl .Release.Namespace .}}"
+
+  driftServer:
+    endpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-drift-monitor.{{ tpl .Release.Namespace .}}.svc.cluster.local"
+  accuracyServer:
+    endpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-accuracy-monitor.{{ tpl .Release.Namespace .}}.svc.cluster.local"
+  serviceHealthServer:
+    endpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-service-monitor.{{ tpl .Release.Namespace .}}.svc.cluster.local"
+  graphServer:
+    endpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-graph-server.{{ tpl .Release.Namespace .}}.svc.cluster.local"
+
+  SMTPServers:
+    server: "smtp.your-domain.com"
+    port: "587"
+    username: "your-smtp-user@example.com"
+    password: "your-smtp-password"
+    senderEmail: "your-email@example.com"
+    senderName: "your-name"
+
+  IAM:
+    defaultAdmin:
+      username: "admin.koreserve"
+      password: "koreserve"
+      nickName: "super admin"
+      email: "admin@example.com"
+      authorityID: "group:admin"
+    defaultUser:
+      username: "user.infinov"
+      password: "infinov"
+      nickName: "user of infinov"
+      email: "admin@example.com"
+      authorityID: "group:default"
+    registration:
+      activationURL: "http://%s/api/v1/auths/registration/activate"
+      defaultAuthorityID: "group:default"
+    JWT:
+      issuer: "KORESERVE"
+      signingKey: "KORESERVE-SigningKey"

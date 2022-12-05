@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "drift-monitor.fullname" . }}
+  labels:
+    {{- include "drift-monitor.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "drift-monitor.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "drift-monitor.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "drift-monitor.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-api
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8002
+              protocol: TCP
+          args:
+          - -c
+          - /app/gunicorn.sh
+          command:
+          - /bin/sh
+          env:
+          - name: KSERVE_API_DEFAULT_STORAGE_ENDPOINT
+            value: "{{ tpl .Values.global.minioEndpoint . | trimPrefix "http://" }}"
+          - name: KSERVE_API_DEFAULT_AWS_ACCESS_KEY_ID
+            value: "{{ .Values.global.minioAccessKeyID | b64enc }}"
+          - name: KSERVE_API_DEFAULT_AWS_SECRET_ACCESS_KEY
+            value: "{{ .Values.global.minioSecretAccessKey | b64enc }}"
+          - name: KSERVE_API_DEFAULT_KAFKA_ENDPOINT
+            value: "{{ tpl .Values.global.kafkaBrokerEndpoint . }}"
+          - name: KSERVE_API_DEFAULT_DATABASE_ENDPOINT
+            value: "{{ tpl .Values.global.elasticSearchEndpoint . }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        - name: {{ .Chart.Name }}-monitor
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+          - python
+          - /app/app/main.py
+          env:
+          - name: KSERVE_API_DEFAULT_STORAGE_ENDPOINT
+            value: "{{ tpl .Values.global.minioEndpoint . }}"
+          - name: KSERVE_API_DEFAULT_AWS_ACCESS_KEY_ID
+            value: "{{ .Values.global.minioAccessKeyID  | b64enc }}"
+          - name: KSERVE_API_DEFAULT_AWS_SECRET_ACCESS_KEY
+            value: "{{ .Values.global.minioSecretAccessKey  | b64enc }}"
+          - name: KSERVE_API_DEFAULT_KAFKA_ENDPOINT
+            value: "{{ tpl .Values.global.kafkaBrokerEndpoint . }}"
+          - name: KSERVE_API_DEFAULT_DATABASE_ENDPOINT
+            value: "{{ tpl .Values.global.elasticSearchEndpoint . }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

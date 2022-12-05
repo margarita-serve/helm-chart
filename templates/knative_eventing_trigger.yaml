@@ -1,0 +1,16 @@
+#Trigger CR 생성
+#
+#Knative Event를 logstash로 전달
+apiVersion: eventing.knative.dev/v1
+kind: Trigger
+metadata:
+  name: inference-logstash-trigger
+spec:
+  broker: kafka-broker
+  subscriber:
+    ref:
+          apiVersion: v1
+          kind: Service
+          name: {{ .Release.Name }}-logstash-inference-log-input
+          namespace: {{ .Release.Namespace }}
+    uri: /
