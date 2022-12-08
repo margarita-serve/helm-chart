@@ -68,7 +68,7 @@ EOF
 
 7. Install Mararita Serve
 ```
-helm repo add margarita-serve https://margarita-serve.github.io/helm-chart-repository/
+helm repo add mararita/margarita-serve https://margarita-serve.github.io/helm-chart-repository/
 helm repo update
-helm install <release-name> margarita-serve -n <namespace> --wait
+helm install <release-name> mararita/margarita-serve -n <namespace> --wait
 ```
