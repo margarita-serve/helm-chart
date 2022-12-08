@@ -68,7 +68,18 @@ EOF
 
 7. Install Mararita Serve
 ```
-helm repo add mararita/margarita-serve https://margarita-serve.github.io/helm-chart-repository/
+helm repo add margarita-serve https://margarita-serve.github.io/helm-chart-repository/
 helm repo update
 helm install <release-name> mararita/margarita-serve -n <namespace> --wait
 ```
+
+Check Services 
+
+first, get your service port(NodePort is the default)
+kubectl get service <release-name>-margarita-serve-frontend -n <namespace> 
+
+then check REST API service, Please refer to the url below
+http://<your-cluster-ip>:<service-port>/openapi/swagger/index.html
+
+then check WEB UI service, Please refer to the url below
+http://<your-cluster-ip>:<service-port>

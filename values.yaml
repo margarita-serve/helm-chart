@@ -266,7 +266,7 @@ margarita-serve-main-api-server:
       username: "user.infinov"
       password: "infinov"
       nickName: "user of infinov"
-      email: "admin@example.com"
+      email: "user@example.com"
       authorityID: "group:default"
     registration:
       activationURL: "http://%s/api/v1/auths/registration/activate"
