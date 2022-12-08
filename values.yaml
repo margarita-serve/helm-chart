@@ -124,7 +124,7 @@ kibana:
 #################
 # MicroServices #
 ################# 
-service-monitor:
+margarita-serve-service-monitor:
   enabled: true
   resources:
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -138,7 +138,7 @@ service-monitor:
     cpu: 1
     memory: 512Mi
 
-accuracy-monitor:
+margarita-serve-accuracy-monitor:
   enabled: true
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
@@ -152,22 +152,7 @@ accuracy-monitor:
     memory: 512Mi
 
 
-drift-monitor:
-  enabled: true
-  resources:
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  limits:
-    cpu: 2
-    memory: 1Gi
-  requests:
-    cpu: 1
-    memory: 512Mi
-
-
-graph-server:
+margarita-serve-drift-monitor:
   enabled: true
   resources:
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -182,7 +167,22 @@ graph-server:
     memory: 512Mi
 
 
-kserve-api:
+margarita-serve-graph-server:
+  enabled: true
+  resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 2
+    memory: 1Gi
+  requests:
+    cpu: 1
+    memory: 512Mi
+
+
+margarita-serve-kserve-api:
   enabled: true
   kserveLoggerUrl: "http://kafka-broker-ingress.knative-eventing.svc.cluster.local/{{ tpl .Release.Namespace .}}/kafka-broker"
   resources:
@@ -197,7 +197,7 @@ kserve-api:
     cpu: 1
     memory: 512Mi
 
-frontend:
+fmargarita-serve-rontend:
   enabled: true
   mainApiServerEndpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-main-api-server.{{ tpl .Release.Namespace .}}.svc.cluster.local:80"
   resources:
@@ -212,7 +212,7 @@ frontend:
     cpu: 1
     memory: 512Mi
 
-main-api-server:
+margarita-serve-main-api-server:
   enabled: true
   resources:
   # We usually recommend not to specify default resources and to leave this as a conscious
