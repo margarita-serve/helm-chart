@@ -70,7 +70,7 @@ EOF
 ```
 helm repo add margarita-serve https://margarita-serve.github.io/helm-chart-repository/
 helm repo update
-helm install <release-name> mararita/margarita-serve -n <namespace> --wait
+helm install <release-name> margarita-serve/margarita-serve -n <namespace> --wait
 ```
 
 Check Services 

@@ -4,7 +4,7 @@
 global:
   app: margarita-serve
   kafkaBrokerEndpoint: "{{ tpl .Release.Name .}}-kafka.{{ tpl .Release.Namespace .}}.svc.cluster.local:9092"
-  grafanaEndpoint: "http://{{ tpl .Release.Name .}}-grafana.{{ tpl .Release.Namespace .}}.svc.cluster.local:80"
+  grafanaEndpoint: "http://{{ tpl .Release.Name .}}-promscale-connector.{{ tpl .Release.Namespace .}}.svc.cluster.local:9201"
   elasticSearchEndpoint: "http://elasticsearch-master.{{ tpl .Release.Namespace .}}.svc.cluster.local:9200"
   minioEndpoint: "{{ tpl .Release.Name .}}-minio.{{ tpl .Release.Namespace .}}.svc.cluster.local:9000"
   minioAccessKeyID: "minioadmin"
@@ -77,8 +77,7 @@ logstash:
      
            filter {
              if [headers][ce_type] == "org.kubeflow.serving.inference.request" {
-              json {
-                source => "message"
+              mutate {
                 add_field => {"type" => "request"}
               }
              } else if [headers][ce_type] == "org.kubeflow.serving.inference.response" {
@@ -180,6 +179,11 @@ margarita-serve-graph-server:
   requests:
     cpu: 1
     memory: 512Mi
+  driftMonitorEndpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-drift-monitor.{{ tpl .Release.Namespace .}}.svc.cluster.local"
+  accuracyMonitorEndpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-accuracy-monitor.{{ tpl .Release.Namespace .}}.svc.cluster.local"
+  serviceMonitorEndpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-service-monitor.{{ tpl .Release.Namespace .}}.svc.cluster.local"
+  mainRestApiServerEndpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-main-api-server.{{ tpl .Release.Namespace .}}.svc.cluster.local"
+  
 
 
 margarita-serve-kserve-api:
@@ -197,7 +201,7 @@ margarita-serve-kserve-api:
     cpu: 1
     memory: 512Mi
 
-fmargarita-serve-rontend:
+margarita-serve-frontend:
   enabled: true
   mainApiServerEndpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-main-api-server.{{ tpl .Release.Namespace .}}.svc.cluster.local:80"
   resources:
@@ -245,7 +249,7 @@ margarita-serve-main-api-server:
   serviceHealthServer:
     endpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-service-monitor.{{ tpl .Release.Namespace .}}.svc.cluster.local"
   graphServer:
-    endpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-graph-server.{{ tpl .Release.Namespace .}}.svc.cluster.local"
+    endpoint: "http://{{ tpl .Release.Name .}}-margarita-serve-graph-server.{{ tpl .Release.Namespace .}}.svc.cluster.local:80"
 
   SMTPServers:
     server: "smtp.your-domain.com"

@@ -90,7 +90,6 @@ affinity: {}
 global:
   app: ""
   kafkaBrokerEndpoint: ""
-  grafanaEndpoint: ""
   elasticSearchEndpoint: ""
   minioEndpoint: ""
   minioAccessKeyID: ""

@@ -39,13 +39,13 @@ spec:
               protocol: TCP
           env:
           - name: DRIFT_MONITOR_ENDPOINT
-            value: "{{ .Values.driftMonitorEndpoint | default (printf "%s-drift-monitor.%s.svc.cluster.local" (.Release.Name) (.Release.Namespace)) }}"
+            value: "{{ tpl .Values.driftMonitorEndpoint . }}"
           - name: ACCURACY_MONITOR_ENDPOINT
-            value: "{{ .Values.accuracyMonitorEndpoint | default (printf "%s-accuracy-monitor.%s.svc.cluster.local" (.Release.Name) (.Release.Namespace)) }}"
+            value: "{{ tpl .Values.accuracyMonitorEndpoint . }}"
           - name: SERVICE_MONITOR_ENDPOINT
-            value: "{{ .Values.serviceMonitorEndpoint | default (printf "%s-service-monitor.%s.svc.cluster.local" (.Release.Name) (.Release.Namespace)) }}"
+            value: "{{ tpl .Values.serviceMonitorEndpoint . }}"
           - name: KORESERVE_MAIN_REST_API_SERVER_ENDPOINT
-            value: "{{ .Values.mainRestApiServerEndpoint | default (printf "%s-main-api-server.%s.svc.cluster.local" (.Release.Name) (.Release.Namespace)) }}"
+            value: "{{ tpl .Values.mainRestApiServerEndpoint . }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
