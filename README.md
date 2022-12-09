@@ -81,5 +81,8 @@ kubectl get service <release-name>-margarita-serve-frontend -n <namespace>
 then check REST API service, Please refer to the url below
 http://<your-cluster-ip>:<service-port>/openapi/swagger/index.html
 
-then check WEB UI service, Please refer to the url below
+check WEB UI service, Please refer to the url below
 http://<your-cluster-ip>:<service-port>
+
+default ID, Password is 
+admin.koreserve / koreserve
