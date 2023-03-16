@@ -31,7 +31,7 @@ tobs:
           disableMountSubPath: true
           volumeClaimTemplate:
             spec:
-              storageClassName: "nfs-client"
+              #storageClassName: "nfs-client"
               accessModes:
                 - "ReadWriteOnce"
               resources:
@@ -46,7 +46,7 @@ minio:
   accessKey: "minioadmin"
   secretKey: "minioadmin"
   persistence:
-    storageClass: "nfs-client"
+    #storageClass: "nfs-client"
     size: "10Gi"
 
 
@@ -58,7 +58,7 @@ elasticsearch:
   enalbed: true
   volumeClaimTemplate: 
     accessModes: ["ReadWriteOnce"]
-    storageClassName: "nfs-client"
+    #storageClassName: "nfs-client"
     resources:
       requests:
         storage: "10Gi"
