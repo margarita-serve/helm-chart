@@ -39,13 +39,13 @@ spec:
               protocol: TCP
           env:
           - name: DRIFT_MONITOR_ENDPOINT
-            value: "{{ tpl .Values.driftMonitorEndpoint . }}"
+            value: "{{ tpl .Values.global.driftMonitorEndpoint . }}"
           - name: ACCURACY_MONITOR_ENDPOINT
-            value: "{{ tpl .Values.accuracyMonitorEndpoint . }}"
+            value: "{{ tpl .Values.global.accuracyMonitorEndpoint . }}"
           - name: SERVICE_MONITOR_ENDPOINT
-            value: "{{ tpl .Values.serviceMonitorEndpoint . }}"
+            value: "{{ tpl .Values.global.serviceMonitorEndpoint . }}"
           - name: KORESERVE_MAIN_REST_API_SERVER_ENDPOINT
-            value: "{{ tpl .Values.mainRestApiServerEndpoint . }}"
+            value: "{{ tpl .Values.global.mainRestApiServerEndpoint . }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
