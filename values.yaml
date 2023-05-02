@@ -9,7 +9,7 @@ global:
   minioEndpoint: "{{ tpl .Release.Name .}}-minio.{{ tpl .Release.Namespace .}}.svc.cluster.local:9000"
   minioAccessKeyID: "minioadmin"
   minioSecretAccessKey: "minioadmin"
-  storageClass: "nfs-client"
+  storageClass: "nfs-csi"
  
 
 #############################
@@ -31,7 +31,7 @@ tobs:
           disableMountSubPath: true
           volumeClaimTemplate:
             spec:
-              #storageClassName: "nfs-client"
+              #storageClassName: "nfs-csi"
               accessModes:
                 - "ReadWriteOnce"
               resources:
@@ -46,7 +46,7 @@ minio:
   accessKey: "minioadmin"
   secretKey: "minioadmin"
   persistence:
-    #storageClass: "nfs-client"
+    #storageClass: "nfs-csi"
     size: "10Gi"
 
 
@@ -58,7 +58,7 @@ elasticsearch:
   enalbed: true
   volumeClaimTemplate: 
     accessModes: ["ReadWriteOnce"]
-    #storageClassName: "nfs-client"
+    #storageClassName: "nfs-csi"
     resources:
       requests:
         storage: "10Gi"
